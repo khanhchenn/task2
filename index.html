@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>World Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      font-family: 'Outfit', sans-serif;
+      padding: 32px 24px;
+    }
+
+    /* HEADER */
+    .header { text-align: center; margin-bottom: 32px; }
+
+    .title-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; margin-bottom: 20px;
+    }
+
+    .globe-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+      font-size: 38px; font-weight: 800; color: #fff;
+      letter-spacing: -1px; text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+    }
+
+    .controls {
+      display: inline-flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      justify-content: center;
+      background: rgba(255,255,255,0.15); backdrop-filter: blur(20px);
+      border-radius: 50px; padding: 10px 24px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .control-group {
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .control-label {
+      font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500;
+    }
+
+    select {
+      background: rgba(255,255,255,0.92); border: none; border-radius: 20px;
+      padding: 6px 28px 6px 12px; font-size: 13px; font-weight: 600;
+      color: #4c1d95; outline: none; font-family: 'Outfit', sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234c1d95' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* CARD */
+    .card {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 22px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: default;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%;
+    }
+
+    .flag { font-size: 24px; }
+
+    .city-name {
+      font-size: 15px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;
+    }
+
+    .country-name {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+
+    .digital-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px; font-weight: 600; color: #0f172a; letter-spacing: 2px;
+      padding: 8px 16px; border-radius: 12px;
+      width: 100%; text-align: center;
+      transition: opacity 0.2s;
+    }
+
+    .date-label {
+      font-size: 11px; color: #94a3b8; letter-spacing: 0.3px;
+    }
+
+    canvas {
+      margin-top: 4px;
+      border-radius: 50%;
+    }
+
+    /* FOOTER */
+    .footer {
+      text-align: center; margin-top: 32px;
+      color: rgba(255,255,255,0.5); font-size: 12px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title-row">
+    <div class="globe-icon">🌍</div>
+    <h1>World Clock</h1>
+  </div>
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Display Mode:</span>
+      <select id="modeSelect">
+        <option value="both">Both</option>
+        <option value="digital">Digital</option>
+        <option value="analog">Analog</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Format:</span>
+      <select id="formatSelect">
+        <option value="24">24-hour</option>
+        <option value="12">12-hour</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="footer">Updates every second &middot; 2026</div>
+
+<script>
+const cities = [
+  { name: "Hanoi",        country: "Vietnam",   code: "VN", timezone: "Asia/Ho_Chi_Minh", flag: "🇻🇳", accent: "#6366f1" },
+  { name: "Yangon",       country: "Myanmar",   code: "MM", timezone: "Asia/Rangoon",     flag: "🇲🇲", accent: "#8b5cf6" },
+  { name: "Seoul",        country: "South Korea", code: "KR", timezone: "Asia/Seoul",     flag: "🇰🇷", accent: "#ec4899" },
+  { name: "Tokyo",        country: "Japan",     code: "JP", timezone: "Asia/Tokyo",       flag: "🇯🇵", accent: "#f59e0b" },
+  { name: "Singapore",    country: "Singapore", code: "SG", timezone: "Asia/Singapore",   flag: "🇸🇬", accent: "#10b981" },
+  { name: "Kuala Lumpur", country: "Malaysia",  code: "MY", timezone: "Asia/Kuala_Lumpur",flag: "🇲🇾", accent: "#3b82f6" },
+];
+
+let mode = "both";
+let format = "24";
+
+// --- Build cards ---
+const grid = document.getElementById("grid");
+const canvases = [];
+
+cities.forEach((city, i) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.id = `card-${i}`;
+
+  // Header
+  const header = document.createElement("div");
+  header.className = "card-header";
+  header.innerHTML = `
+    <span class="flag">${city.flag}</span>
+    <div>
+      <div class="city-name">${city.name}</div>
+      <div class="country-name" style="color:${city.accent}">${city.country}</div>
+    </div>
+  `;
+
+  // Digital
+  const digital = document.createElement("div");
+  digital.className = "digital-time";
+  digital.id = `digital-${i}`;
+  digital.style.background = `linear-gradient(135deg, ${city.accent}18, ${city.accent}08)`;
+  digital.style.border = `1px solid ${city.accent}28`;
+
+  // Date
+  const dateEl = document.createElement("div");
+  dateEl.className = "date-label";
+  dateEl.id = `date-${i}`;
+
+  // Canvas
+  const canvas = document.createElement("canvas");
+  canvas.width = 120; canvas.height = 120;
+  canvas.id = `canvas-${i}`;
+  canvases.push(canvas);
+
+  card.appendChild(header);
+  card.appendChild(digital);
+  card.appendChild(dateEl);
+  card.appendChild(canvas);
+  grid.appendChild(card);
+});
+
+// --- Controls ---
+document.getElementById("modeSelect").addEventListener("change", e => {
+  mode = e.target.value;
+  updateVisibility();
+});
+document.getElementById("formatSelect").addEventListener("change", e => {
+  format = e.target.value;
+});
+
+function updateVisibility() {
+  cities.forEach((_, i) => {
+    const digital = document.getElementById(`digital-${i}`);
+    const canvas = document.getElementById(`canvas-${i}`);
+    if (mode === "digital") { digital.classList.remove("hidden"); canvas.classList.add("hidden"); }
+    else if (mode === "analog") { digital.classList.add("hidden"); canvas.classList.remove("hidden"); }
+    else { digital.classList.remove("hidden"); canvas.classList.remove("hidden"); }
+  });
+}
+
+// --- Get time in timezone ---
+function getTime(timezone) {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    hour: "numeric", minute: "numeric", second: "numeric",
+    hour12: false
+  }).formatToParts(now);
+  const get = t => parseInt(parts.find(p => p.type === t)?.value || 0);
+  let h = get("hour") % 24, m = get("minute"), s = get("second");
+
+  const dateStr = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone, weekday: "long", year: "numeric", month: "long", day: "numeric"
+  }).format(now);
+
+  let display;
+  if (format === "12") {
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+    display = `${String(h12).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} ${ampm}`;
+  } else {
+    display = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+
+  return { h, m, s, display, dateStr };
+}
+
+// --- Draw analog clock ---
+function drawClock(canvas, h, m, s, accent) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2, r = W / 2 - 8;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Outer glow ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+  ctx.strokeStyle = accent + "40";
+  ctx.lineWidth = 5;
+  ctx.stroke();
+
+  // Face
+  const grad = ctx.createRadialGradient(cx, cy - r * 0.3, 0, cx, cy, r);
+  grad.addColorStop(0, "#ffffff");
+  grad.addColorStop(1, "#f1f5f9");
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fillStyle = grad;
+  ctx.shadowColor = "rgba(0,0,0,0.12)";
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Border
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // Ticks
+  for (let i = 0; i < 60; i++) {
+    const angle = (i * 6 - 90) * Math.PI / 180;
+    const isHour = i % 5 === 0;
+    const inner = r - (isHour ? 12 : 6);
+    ctx.beginPath();
+    ctx.moveTo(cx + r * Math.cos(angle), cy + r * Math.sin(angle));
+    ctx.lineTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+    ctx.strokeStyle = isHour ? "#94a3b8" : "#cbd5e1";
+    ctx.lineWidth = isHour ? 1.8 : 0.9;
+    ctx.stroke();
+  }
+
+  // Numbers 12,3,6,9
+  ctx.font = "600 9px 'DM Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#64748b";
+  [12, 3, 6, 9].forEach(n => {
+    const angle = (n * 30 - 90) * Math.PI / 180;
+    const dist = r - 20;
+    ctx.fillText(n, cx + dist * Math.cos(angle), cy + dist * Math.sin(angle));
+  });
+
+  // Draw hand
+  const hand = (deg, len, width, color, rounded = true) => {
+    const angle = (deg - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + len * Math.cos(angle), cy + len * Math.sin(angle));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = rounded ? "round" : "butt";
+    ctx.stroke();
+  };
+
+  hand((h % 12) * 30 + m * 0.5, r * 0.50, 3.5, "#1e293b");
+  hand(m * 6 + s * 0.1,         r * 0.70, 2.5, "#334155");
+  hand(s * 6,                   r * 0.82, 1.5, "#ef4444");
+
+  // Center dot
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+  ctx.fillStyle = "#ef4444";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+}
+
+// --- Main tick ---
+function tick() {
+  cities.forEach((city, i) => {
+    const { h, m, s, display, dateStr } = getTime(city.timezone);
+    document.getElementById(`digital-${i}`).textContent = display;
+    document.getElementById(`date-${i}`).textContent = dateStr;
+    if (mode !== "digital") drawClock(canvases[i], h, m, s, city.accent);
+  });
+}
+
+updateVisibility();
+tick();
+setInterval(tick, 1000);
+</script>
+</body>
+</html>
